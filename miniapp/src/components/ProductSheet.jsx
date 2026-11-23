@@ -111,9 +111,8 @@ export default function ProductSheet({ product, options, onClose }) {
                           onClick={() => pick({ size: s.id })}
                         >
                           <b>{s.name}</b>
-                          {(s.sub || s.delta !== 0) && (
-                            <small>{[s.sub, signed(s.delta)].filter(Boolean).join(' · ')}</small>
-                          )}
+                          {s.sub && <small>{s.sub}</small>}
+                          {s.delta !== 0 && <em>{signed(s.delta)}</em>}
                         </button>
                       ))}
                     </div>
@@ -131,7 +130,7 @@ export default function ProductSheet({ product, options, onClose }) {
                           onClick={() => pick({ crust: c.id })}
                         >
                           <b>{c.name}</b>
-                          {c.delta > 0 && <small>{signed(c.delta)}</small>}
+                          {c.delta > 0 && <em>{signed(c.delta)}</em>}
                         </button>
                       ))}
                     </div>
