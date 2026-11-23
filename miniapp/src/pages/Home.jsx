@@ -1,52 +1,63 @@
 import Stories from '../components/Stories.jsx';
-import Logo from '../components/Logo.jsx';
 import PizzaImage from '../components/PizzaImage.jsx';
 import ProductCard from '../components/ProductCard.jsx';
-import { ChevronDownIcon, ChevronRightIcon, PinIcon, SearchIcon } from '../components/Icons.jsx';
+import { ChevronRightIcon, FlameIcon, GridIcon, SearchIcon, SlidersIcon } from '../components/Icons.jsx';
 import { tgUser } from '../telegram.js';
-import { etaMinutes, statusLabel, storage } from '../utils.js';
+import { CATEGORY_ICONS, discountPercent, etaMinutes, statusLabel } from '../utils.js';
 
-const PROMO_IMG = 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&q=80';
-
-const CATEGORY_EMOJI = { Klassik: '🍕', "Go'shtli": '🥩', Pishloqli: '🧀', Vegetarian: '🥦', Achchiq: '🌶️' };
+const CATEGORY_TITLES = { Pizza: 'Pitsalar', Burger: 'Burgerlar', Lavash: 'Lavashlar', Ichimlik: 'Ichimliklar' };
 
 export default function Home({ profile, products, categories, options, activeOrder, onOpenProduct, onNavigate }) {
   const name = profile?.firstName || tgUser?.first_name || 'Mehmon';
-  const address = storage.get('last_address');
-  const popular = products.slice(0, 4);
+  const discountOf = (p) => discountPercent(p.oldPrice, p.newPrice);
+
+  const offer = [...products].filter((p) => discountOf(p) > 0).sort((a, b) => discountOf(b) - discountOf(a))[0];
+
+  // "Ommabop": har kategoriyadan navbatma-navbat
+  const byCat = categories.map((c) => products.filter((p) => p.category === c));
+  const popular = [];
+  for (let i = 0; popular.length < 8 && byCat.some((l) => l[i]); i += 1) {
+    byCat.forEach((l) => l[i] && popular.length < 8 && popular.push(l[i]));
+  }
 
   return (
-    <div className="page">
+    <div className="page home">
       <header className="topbar">
-        <div className="loc">
-          <span className="loc-label">Yetkazish manzili</span>
-          <button className="loc-value" onClick={() => onNavigate('cart')}>
-            <PinIcon size={17} />
-            <span>{address || 'Manzilni kiriting'}</span>
-            <ChevronDownIcon size={16} />
-          </button>
-        </div>
+        <button className="glass-round" onClick={() => onNavigate('catalog')} aria-label="Menyu">
+          <GridIcon size={20} />
+        </button>
         <button className="avatar" onClick={() => onNavigate('profile')} aria-label="Profil">
           {name.charAt(0).toUpperCase()}
+          <span className="avatar-dot" />
         </button>
       </header>
 
-      <h1 className="greet">
-        Salom, {name}!
-        <span>
-          Bugun qaysi pizzani <em>tez</em> yetkazaylik?
-        </span>
+      <p className="hello">Salom, {name} 👋</p>
+      <h1 className="headline">
+        Mazali taom,
+        <br />
+        <span>Zo'r kayfiyat!</span>
       </h1>
 
-      <button className="search" onClick={() => onNavigate('catalog')}>
+      <button className="search glass" onClick={() => onNavigate('catalog')}>
         <SearchIcon size={20} />
-        <span>Pizza qidirish...</span>
+        <span className="search-text">Sevimli taomingizni qidiring</span>
+        <span className="search-filter">
+          <SlidersIcon size={18} />
+        </span>
       </button>
 
-      <Stories />
+      <div className="cat-tiles">
+        {categories.map((c) => (
+          <button key={c} className="cat-tile glass" onClick={() => onNavigate('catalog', { category: c })}>
+            <span className="cat-emoji">{CATEGORY_ICONS[c] || '🍽️'}</span>
+            <span className="cat-name">{c}</span>
+          </button>
+        ))}
+      </div>
 
       {activeOrder && (
-        <button className="active-order" onClick={() => onNavigate('track', { orderId: activeOrder.id })}>
+        <button className="active-order glass" onClick={() => onNavigate('track', { orderId: activeOrder.id })}>
           <span className="ao-icon">🛵</span>
           <span className="ao-text">
             <b>
@@ -58,47 +69,64 @@ export default function Home({ profile, products, categories, options, activeOrd
         </button>
       )}
 
-      <section className="promo-card" onClick={() => onNavigate('catalog')}>
-        <div className="promo-text">
-          <Logo size="sm" light />
-          <h2>Issiq pizza 30 daqiqada</h2>
-          <p>Buyurtma bering va kuryerni xaritada jonli kuzating</p>
-          <span className="promo-btn">Buyurtma berish</span>
-        </div>
-        <div className="promo-img">
-          <PizzaImage src={PROMO_IMG} alt="Pizza" />
-        </div>
-      </section>
-
-      {categories.length > 0 && (
-        <>
-          <div className="section-head">
-            <h3>Kategoriyalar</h3>
+      {offer && (
+        <section className="offer glass" onClick={() => onOpenProduct(offer)}>
+          <div className="offer-text">
+            <span className="offer-kicker">
+              <FlameIcon size={14} /> Cheklangan taklif
+            </span>
+            <h2>
+              {offer.name}
+              <br />
+              <span>{offer.category}</span>
+            </h2>
+            <span className="btn btn-primary btn-sm">Buyurtma berish</span>
           </div>
-          <div className="cats">
-            {['all', ...categories].map((c) => (
-              <button key={c} className="cat" onClick={() => onNavigate('catalog', { category: c })}>
-                <span className="cat-icon">{c === 'all' ? '🔥' : CATEGORY_EMOJI[c] || '🍕'}</span>
-                <span className="cat-name">{c === 'all' ? 'Barchasi' : c}</span>
-              </button>
-            ))}
+          <div className="offer-img">
+            <PizzaImage src={offer.imageUrl} alt={offer.name} />
           </div>
-        </>
+          <div className="offer-badge">
+            <b>{discountOf(offer)}%</b>
+            <small>chegirma</small>
+          </div>
+        </section>
       )}
+
+      <Stories />
 
       {popular.length > 0 && (
         <>
           <div className="section-head">
-            <h3>Ommabop pizzalar</h3>
+            <h3>Ommabop</h3>
             <button onClick={() => onNavigate('catalog', { category: 'all' })}>Barchasi</button>
           </div>
-          <div className="grid">
+          <div className="h-scroll">
             {popular.map((p) => (
-              <ProductCard key={p.id} product={p} options={options} onOpen={onOpenProduct} />
+              <ProductCard key={p.id} product={p} options={options} onOpen={onOpenProduct} compact />
             ))}
           </div>
         </>
       )}
+
+      {categories.map((c) => {
+        const list = products.filter((p) => p.category === c);
+        if (!list.length) return null;
+        return (
+          <div key={c}>
+            <div className="section-head">
+              <h3>
+                {CATEGORY_ICONS[c] || '🍽️'} {CATEGORY_TITLES[c] || c}
+              </h3>
+              <button onClick={() => onNavigate('catalog', { category: c })}>Barchasi</button>
+            </div>
+            <div className="h-scroll">
+              {list.map((p) => (
+                <ProductCard key={p.id} product={p} options={options} onOpen={onOpenProduct} compact />
+              ))}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

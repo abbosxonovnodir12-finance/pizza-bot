@@ -120,3 +120,21 @@ export function StarIcon({ size = 16, ...props }) {
     </svg>
   );
 }
+
+export function HeartIcon({ size = 20, filled = false, ...props }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M12 20.5s-7.5-4.6-9.3-9.2C1.4 8 3.4 4.5 7 4.5c2 0 3.6 1.1 5 3 1.4-1.9 3-3 5-3 3.6 0 5.6 3.5 4.3 6.8-1.8 4.6-9.3 9.2-9.3 9.2z" />
+    </svg>
+  );
+}
+
+export const SlidersIcon = make(
+  <>
+    <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
+    <circle cx="16" cy="7" r="2" />
+    <circle cx="10" cy="17" r="2" />
+  </>
+);
+
+export const FlameIcon = make(<path d="M12 22c4 0 7-2.7 7-6.8 0-3.9-2.6-6.2-4.4-8.9-.4 2-1.4 3.2-2.6 3.8.3-3.4-1.5-6.4-4-8.1.2 3.3-3 5.8-3 9.8C5 18.6 8 22 12 22z" />);

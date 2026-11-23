@@ -5,31 +5,41 @@ const Order = require('../models/Order');
 const { notifyOrderAccepted } = require('./botController');
 
 const OPTIONS = config.menuOptions;
-const SIZES = new Map(OPTIONS.sizes.map((s) => [s.id, s]));
-const CRUSTS = new Map(OPTIONS.crusts.map((c) => [c.id, c]));
-const TOPPINGS = new Map(OPTIONS.toppings.map((t) => [t.id, t]));
+const EMPTY_SET = { sizes: [], crusts: [], extras: [], defaults: {} };
 
 function toProfile(user) {
   return { id: user.id, firstName: user.firstName, lastName: user.lastName, username: user.username, phone: user.phone };
 }
 
-function describeOptions(size, crust, toppings) {
-  const parts = [`${size.name} ${size.cm} sm`, `${crust.name} xamir`];
-  if (toppings.length) parts.push(`+ ${toppings.map((t) => t.name).join(', ')}`);
+function describeOptions(size, crust, extras) {
+  const parts = [];
+  if (size) parts.push(size.sub ? `${size.name} ${size.sub}` : size.name);
+  if (crust) parts.push(`${crust.name} xamir`);
+  if (extras.length) parts.push(`+ ${extras.map((t) => t.name).join(', ')}`);
   return parts.join(' · ');
 }
 
-function parseLine(raw) {
+function parseBasic(raw) {
   const productId = Number(raw && raw.productId);
   const quantity = Number(raw && raw.quantity);
-  const size = SIZES.get(raw && raw.size ? raw.size : OPTIONS.defaults.size);
-  const crust = CRUSTS.get(raw && raw.crust ? raw.crust : OPTIONS.defaults.crust);
-  const toppingIds = Array.isArray(raw && raw.toppings) ? [...new Set(raw.toppings)] : [];
-  const toppings = toppingIds.map((id) => TOPPINGS.get(id));
-
   if (!Number.isInteger(productId) || !Number.isInteger(quantity) || quantity < 1 || quantity > 50) return null;
-  if (!size || !crust || toppings.some((t) => !t) || toppings.length > TOPPINGS.size) return null;
-  return { productId, quantity, size, crust, toppings };
+  return { productId, quantity, raw };
+}
+
+// Mahsulot kategoriyasiga qarab o'lcham/xamir/qo'shimchalarni tekshiradi
+function resolveOptions(product, raw) {
+  const set = OPTIONS[product.category] || EMPTY_SET;
+  const pick = (list, id, fallback) => {
+    if (!list.length) return null;
+    const found = list.find((x) => x.id === (id || fallback));
+    return found || list.find((x) => x.id === fallback) || list[0];
+  };
+  const size = pick(set.sizes, raw.size, set.defaults.size);
+  const crust = pick(set.crusts, raw.crust, set.defaults.crust);
+  const ids = Array.isArray(raw.toppings) ? [...new Set(raw.toppings)] : [];
+  const extras = ids.map((id) => set.extras.find((e) => e.id === id));
+  if (extras.some((e) => !e)) return null;
+  return { size, crust, extras };
 }
 
 async function getProfile(req, res) {
@@ -39,6 +49,10 @@ async function getProfile(req, res) {
 
 async function getProducts(req, res) {
   const [products, categories] = await Promise.all([Product.findAll(), Product.categories()]);
+  // Kategoriyalar tartibi: avval sozlamalardagi tartib (Pizza, Burger, Lavash, Ichimlik), keyin qolganlari
+  const order = Object.keys(OPTIONS);
+  const rank = (c) => (order.includes(c) ? order.indexOf(c) : order.length);
+  categories.sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
   res.json({ products, categories, colaPrice: config.colaPrice, colaName: config.colaName, options: OPTIONS });
 }
 
@@ -66,7 +80,7 @@ async function createOrder(req, res) {
     return res.status(400).json({ error: "Savatchada juda ko'p mahsulot bor" });
   }
 
-  const lines = items.map(parseLine);
+  const lines = items.map(parseBasic);
   if (lines.some((l) => !l)) {
     return res.status(400).json({ error: "Savatchadagi ma'lumot noto'g'ri. Savatchani yangilang." });
   }
@@ -78,24 +92,30 @@ async function createOrder(req, res) {
   }
   const productMap = new Map(products.map((p) => [p.id, p]));
 
-  const orderItems = lines.map(({ productId, quantity, size, crust, toppings }) => {
+  const orderItems = [];
+  for (const { productId, quantity, raw } of lines) {
     const p = productMap.get(productId);
+    const opts = resolveOptions(p, raw);
+    if (!opts) {
+      return res.status(400).json({ error: "Savatchadagi ma'lumot noto'g'ri. Savatchani yangilang." });
+    }
+    const { size, crust, extras } = opts;
     const price = Math.max(
-      p.newPrice + size.delta + crust.delta + toppings.reduce((s, t) => s + t.price, 0),
-      OPTIONS.minUnitPrice
+      p.newPrice + (size ? size.delta : 0) + (crust ? crust.delta : 0) + extras.reduce((s, t) => s + t.price, 0),
+      config.minUnitPrice
     );
-    return {
+    orderItems.push({
       productId,
       name: p.name,
       price,
       quantity,
       imageUrl: p.imageUrl,
-      size: size.id,
-      crust: crust.id,
-      toppings: toppings.map((t) => t.id),
-      options: describeOptions(size, crust, toppings),
-    };
-  });
+      size: size ? size.id : null,
+      crust: crust ? crust.id : null,
+      toppings: extras.map((t) => t.id),
+      options: describeOptions(size, crust, extras),
+    });
+  }
   if (addCola) {
     orderItems.push({ productId: null, name: config.colaName, price: config.colaPrice, quantity: 1, imageUrl: null });
   }

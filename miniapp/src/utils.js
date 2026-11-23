@@ -1,5 +1,7 @@
 export const BRAND = 'TEZ';
 
+export const CATEGORY_ICONS = { Pizza: '🍕', Burger: '🍔', Lavash: '🌯', Ichimlik: '🥤' };
+
 export const RIDE_MINUTES = 15;
 export const PREP_MINUTES = 20;
 
@@ -42,49 +44,65 @@ export const storage = {
   },
 };
 
-/* ---------- Pizza options ---------- */
+/* ---------- Mahsulot sozlamalari (kategoriya bo'yicha) ---------- */
 
-export function defaultSelection(options) {
-  return { size: options?.defaults?.size || 'M', crust: options?.defaults?.crust || 'classic', toppings: [] };
+const MIN_UNIT_PRICE = 5000;
+const EMPTY_SET = { sizes: [], crusts: [], extras: [], defaults: {} };
+
+export function optionSet(options, product) {
+  return (options && product && options[product.category]) || EMPTY_SET;
+}
+
+export function defaultSelection(options, product) {
+  const set = optionSet(options, product);
+  return {
+    size: set.defaults?.size || set.sizes[0]?.id || null,
+    crust: set.defaults?.crust || set.crusts[0]?.id || null,
+    toppings: [],
+  };
+}
+
+// Tanlovni shu kategoriyada mavjud variantlarga moslaydi
+function resolve(product, sel, options) {
+  const set = optionSet(options, product);
+  const def = defaultSelection(options, product);
+  const size = set.sizes.find((s) => s.id === sel?.size) || set.sizes.find((s) => s.id === def.size) || null;
+  const crust = set.crusts.find((c) => c.id === sel?.crust) || set.crusts.find((c) => c.id === def.crust) || null;
+  const extras = set.extras.filter((e) => (sel?.toppings || []).includes(e.id));
+  return { size, crust, extras };
 }
 
 export function unitPrice(product, sel, options) {
-  if (!options) return product.newPrice;
-  const size = options.sizes.find((s) => s.id === sel.size);
-  const crust = options.crusts.find((c) => c.id === sel.crust);
-  const tops = options.toppings.filter((t) => sel.toppings.includes(t.id));
-  const price =
-    product.newPrice + (size?.delta || 0) + (crust?.delta || 0) + tops.reduce((s, t) => s + t.price, 0);
-  return Math.max(price, options.minUnitPrice || 0);
+  const { size, crust, extras } = resolve(product, sel, options);
+  const price = product.newPrice + (size?.delta || 0) + (crust?.delta || 0) + extras.reduce((s, e) => s + e.price, 0);
+  return Math.max(price, MIN_UNIT_PRICE);
 }
 
-export function describeSelection(sel, options) {
-  if (!options) return '';
-  const size = options.sizes.find((s) => s.id === sel.size);
-  const crust = options.crusts.find((c) => c.id === sel.crust);
-  const tops = options.toppings.filter((t) => sel.toppings.includes(t.id));
+export function describeSelection(product, sel, options) {
+  const { size, crust, extras } = resolve(product, sel, options);
   const parts = [];
-  if (size) parts.push(`${size.name} ${size.cm} sm`);
+  if (size) parts.push(size.sub ? `${size.name} ${size.sub}` : size.name);
   if (crust) parts.push(`${crust.name} xamir`);
-  if (tops.length) parts.push(`+ ${tops.map((t) => t.name).join(', ')}`);
+  if (extras.length) parts.push(`+ ${extras.map((e) => e.name).join(', ')}`);
   return parts.join(' · ');
 }
 
 export function lineKey(productId, sel) {
-  return [productId, sel.size, sel.crust, [...sel.toppings].sort().join('+')].join('|');
+  return [productId, sel.size || '-', sel.crust || '-', [...sel.toppings].sort().join('+')].join('|');
 }
 
 export function makeLine(product, sel, options, quantity = 1) {
+  const { size, crust, extras } = resolve(product, sel, options);
+  const clean = { size: size?.id || null, crust: crust?.id || null, toppings: extras.map((e) => e.id) };
   return {
-    key: lineKey(product.id, sel),
+    key: lineKey(product.id, clean),
     productId: product.id,
     name: product.name,
     imageUrl: product.imageUrl,
-    size: sel.size,
-    crust: sel.crust,
-    toppings: [...sel.toppings],
-    price: unitPrice(product, sel, options),
-    options: describeSelection(sel, options),
+    category: product.category,
+    ...clean,
+    price: unitPrice(product, clean, options),
+    options: describeSelection(product, clean, options),
     quantity,
   };
 }

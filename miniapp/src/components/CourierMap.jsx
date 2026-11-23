@@ -17,11 +17,11 @@ export default function CourierMap({ progress = 0, moving = false, delivered = f
   return (
     <div className="map">
       <svg viewBox="0 0 360 230" preserveAspectRatio="xMidYMid slice" className="map-svg" aria-hidden="true">
-        <rect width="360" height="230" fill="#f3efe9" />
+        <rect width="360" height="230" fill="#1b1714" />
 
-        <path d="M0 150 C 60 130 90 175 160 168 S 260 200 360 176 V230 H0z" fill="#dcebf7" opacity="0.7" />
-        <rect x="236" y="120" width="96" height="62" rx="14" fill="#dff0dc" />
-        <rect x="18" y="20" width="70" height="56" rx="14" fill="#dff0dc" />
+        <path d="M0 150 C 60 130 90 175 160 168 S 260 200 360 176 V230 H0z" fill="#16222e" opacity="0.7" />
+        <rect x="236" y="120" width="96" height="62" rx="14" fill="#1d2a1e" />
+        <rect x="18" y="20" width="70" height="56" rx="14" fill="#1d2a1e" />
 
         {[
           [104, 14, 64, 44],
@@ -34,10 +34,10 @@ export default function CourierMap({ progress = 0, moving = false, delivered = f
           [108, 180, 60, 36],
           [190, 186, 60, 30],
         ].map(([x, y, w, h], i) => (
-          <rect key={i} x={x} y={y} width={w} height={h} rx="8" fill="#e9e2d8" />
+          <rect key={i} x={x} y={y} width={w} height={h} rx="8" fill="#26201c" />
         ))}
 
-        <g stroke="#ffffff" strokeLinecap="round" fill="none">
+        <g stroke="#3a312b" strokeLinecap="round" fill="none">
           <path d="M0 86 H360" strokeWidth="9" />
           <path d="M0 140 C 80 136 160 140 360 130" strokeWidth="7" />
           <path d="M96 0 V230" strokeWidth="7" />
@@ -47,7 +47,7 @@ export default function CourierMap({ progress = 0, moving = false, delivered = f
           <path d="M0 40 H96" strokeWidth="5" />
         </g>
 
-        <path d={ROUTE} fill="none" stroke="#ffd7bd" strokeWidth="7" strokeLinecap="round" />
+        <path d={ROUTE} fill="none" stroke="#5a3418" strokeWidth="7" strokeLinecap="round" />
         <path
           ref={pathRef}
           d={ROUTE}
@@ -67,8 +67,8 @@ export default function CourierMap({ progress = 0, moving = false, delivered = f
         </g>
 
         <g transform="translate(322 34)">
-          <path d="M-6 10 L0 20 L6 10z" fill="#1a1a1f" />
-          <circle r="14" fill="#1a1a1f" />
+          <path d="M-6 10 L0 20 L6 10z" fill="#ff6b00" />
+          <circle r="14" fill="#ff6b00" />
           <text y="5" textAnchor="middle" fontSize="13">🏠</text>
         </g>
 

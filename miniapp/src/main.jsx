@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import { CartProvider } from './CartContext.jsx';
+import { FavoritesProvider } from './FavoritesContext.jsx';
 import { initTelegram } from './telegram.js';
 import './styles.css';
 
@@ -10,7 +11,9 @@ initTelegram();
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <CartProvider>
-      <App />
+      <FavoritesProvider>
+        <App />
+      </FavoritesProvider>
     </CartProvider>
   </React.StrictMode>
 );

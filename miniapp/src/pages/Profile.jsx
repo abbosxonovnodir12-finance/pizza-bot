@@ -25,7 +25,7 @@ export default function Profile({ profile, products, options, orders: initialOrd
       .map((i) =>
         makeLine(
           map.get(i.productId),
-          { size: i.size || 'M', crust: i.crust || 'classic', toppings: i.toppings || [] },
+          { size: i.size, crust: i.crust, toppings: i.toppings || [] },
           options,
           i.quantity
         )
