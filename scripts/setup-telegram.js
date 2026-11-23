@@ -1,4 +1,5 @@
-// Botni Vercel'dagi saytga ulash:      node scripts/setup-telegram.js https://pizza-bot-theta.vercel.app
+// Botni ulash:  node scripts/setup-telegram.js <Mini App manzili> [--api <backend manzili>]
+//   Masalan:    node scripts/setup-telegram.js https://pizza-bot-theta.vercel.app --api https://tez-pizza-api.onrender.com
 // Botni yana kompyuterga qaytarish:    node scripts/setup-telegram.js --local
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
@@ -40,14 +41,16 @@ async function main() {
   const base = (process.argv[2] || '').replace(/\/+$/, '');
   if (!/^https:\/\//.test(base)) throw new Error('Sayt manzilini bering: node scripts/setup-telegram.js https://...');
   if (!SECRET) throw new Error(".env faylida TELEGRAM_WEBHOOK_SECRET yo'q");
+  const apiIdx = process.argv.indexOf('--api');
+  const apiBase = (apiIdx > -1 ? process.argv[apiIdx + 1] : base).replace(//+$/, '');
 
   await tg('setWebhook', {
-    url: `${base}/api/telegram`,
+    url: `${apiBase}/api/telegram`,
     secret_token: SECRET,
     drop_pending_updates: true,
     allowed_updates: ['message'],
   });
-  console.log(`✅ Webhook: ${base}/api/telegram`);
+  console.log(`✅ Webhook: ${apiBase}/api/telegram`);
 
   await tg('setMyCommands', { commands: [{ command: 'start', description: 'Botni ishga tushirish' }] });
 

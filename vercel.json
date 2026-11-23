@@ -1,15 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "installCommand": "npm install",
+  "installCommand": "npm install --ignore-scripts",
   "buildCommand": "node scripts/build-web.js",
   "outputDirectory": "public",
-  "regions": ["sin1"],
-  "functions": {
-    "api/index.js": { "maxDuration": 30 }
-  },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api" },
+    { "source": "/api/:path*", "destination": "https://tez-pizza-api.onrender.com/api/:path*" },
     { "source": "/admin", "destination": "/admin/index.html" }
   ]
 }
