@@ -1,0 +1,38 @@
+{
+  "name": "pizza-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pizza yetkazib berish: Telegram Bot + Mini App + Admin Panel",
+  "main": "src/index.js",
+  "scripts": {
+    "setup": "npm install && npm install --prefix miniapp && npm install --prefix admin && npx prisma migrate dev --name init && npm run seed",
+    "go": "node scripts/start.js",
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "seed": "node prisma/seed.js",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "miniapp": "npm run dev --prefix miniapp",
+    "admin": "npm run dev --prefix admin",
+    "start:all": "concurrently --restart-tries -1 --restart-after 5000 -n API,MINIAPP,ADMIN -c red,green,blue \"npm run start\" \"npm run miniapp\" \"npm run admin\"",
+    "postinstall": "prisma generate",
+    "build:web": "node scripts/build-web.js",
+    "telegram:vercel": "node scripts/setup-telegram.js",
+    "telegram:local": "node scripts/setup-telegram.js --local"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^6.19.3",
+    "@prisma/client": "^6.16.0",
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "grammy": "^1.36.0",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "prisma": "^6.16.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
