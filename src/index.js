@@ -1,10 +1,11 @@
-// Lokal (kompyuterda) ishga tushirish fayli. Vercel'da api/index.js ishlatiladi.
+// Server ishga tushirish fayli (Render va lokal kompyuter uchun).
 const config = require('./config/default');
 const app = require('./app');
 const prisma = require('./database/connection');
 const bot = require('./core/bot');
 const { setupBotMenu } = require('./controllers/botController');
 const { seedProducts } = require('../prisma/seed');
+const { logError } = require('./core/log');
 
 async function connectWithRetry() {
   for (let attempt = 1; ; attempt += 1) {
@@ -34,10 +35,16 @@ async function main() {
     console.log("🍕 Baza bo'sh edi — 4 ta pizza qo'shildi");
   }
 
-  // Bot webhook orqali ishlayotgan bo'lsa (Render/Vercel), polling yoqilmaydi.
+  // Hostingda (Render/Vercel) bot doim webhook orqali ishlaydi — Telegram'ga so'rov shart emas.
+  if (process.env.RENDER || process.env.VERCEL) {
+    console.log('🤖 Bot webhook rejimida (/api/telegram)');
+    return;
+  }
+
+  // Lokal: webhook o'rnatilgan bo'lsa, polling yoqilmaydi (aks holda hosting bilan to'qnashadi).
   const webhook = await bot.api.getWebhookInfo();
   if (webhook.url) {
-    console.log(`🤖 Bot webhook rejimida: ${webhook.url}`);
+    console.log(`🤖 Bot hostingda ishlayapti (${webhook.url}). Lokal bot yoqilmadi.`);
     return;
   }
 
@@ -48,13 +55,13 @@ async function main() {
       onStart: (info) => console.log(`🤖 Bot ishga tushdi: https://t.me/${info.username}`),
     })
     .catch((err) => {
-      console.error("❌ Bot to'xtadi, qayta ishga tushiriladi:", err.message);
+      logError("❌ Bot to'xtadi, qayta ishga tushiriladi:", err);
       process.exit(1);
     });
 }
 
 process.on('unhandledRejection', (err) => {
-  console.error('⚠️  Kutilmagan xato:', err && err.message ? err.message : err);
+  logError('⚠️  Kutilmagan xato:', err);
 });
 
 async function shutdown() {
@@ -67,7 +74,7 @@ process.once('SIGINT', shutdown);
 process.once('SIGTERM', shutdown);
 
 main().catch(async (err) => {
-  console.error('❌ Ishga tushirishda xatolik:', err);
+  logError('❌ Ishga tushirishda xatolik:', err);
   await prisma.reset();
   process.exit(1);
 });

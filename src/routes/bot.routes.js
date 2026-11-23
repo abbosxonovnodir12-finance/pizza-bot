@@ -1,4 +1,5 @@
 const botController = require('../controllers/botController');
+const { logError } = require('../core/log');
 
 function registerBotRoutes(bot) {
   bot.command('start', botController.start);
@@ -6,7 +7,7 @@ function registerBotRoutes(bot) {
   bot.on('message', botController.fallback);
 
   bot.catch((err) => {
-    console.error('🤖 Bot xatosi:', err.error || err);
+    logError('🤖 Bot xatosi:', err.error || err);
   });
 }
 

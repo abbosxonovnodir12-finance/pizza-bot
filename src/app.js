@@ -6,6 +6,7 @@ const bot = require('./core/bot');
 const registerBotRoutes = require('./routes/bot.routes');
 const clientRoutes = require('./routes/client.routes');
 const adminRoutes = require('./routes/admin.routes');
+const { logError } = require('./core/log');
 
 BigInt.prototype.toJSON = function toJSON() {
   return this.toString();
@@ -43,7 +44,7 @@ app.use((err, req, res, next) => {
   if (err.type === 'entity.parse.failed') {
     return res.status(400).json({ error: "Noto'g'ri so'rov" });
   }
-  console.error('❌ Server xatosi:', err);
+  logError('❌ Server xatosi:', err);
   res.status(500).json({ error: 'Serverda xatolik yuz berdi' });
 });
 
