@@ -22,6 +22,11 @@ async function connectWithRetry() {
 }
 
 async function main() {
+  // Portni darhol ochamiz (Render shu orqali server tirikligini tekshiradi).
+  app.listen(config.port, () => {
+    console.log(`🚀 API ishga tushdi: port ${config.port}`);
+  });
+
   await connectWithRetry();
   console.log('🗄️  Bazaga ulanildi');
 
@@ -29,14 +34,10 @@ async function main() {
     console.log("🍕 Baza bo'sh edi — 4 ta pizza qo'shildi");
   }
 
-  app.listen(config.port, () => {
-    console.log(`🚀 API ishga tushdi: http://localhost:${config.port}`);
-  });
-
-  // Bot Vercel'da (webhook) ishlayotgan bo'lsa, lokal nusxa unga xalaqit bermasligi kerak.
+  // Bot webhook orqali ishlayotgan bo'lsa (Render/Vercel), polling yoqilmaydi.
   const webhook = await bot.api.getWebhookInfo();
   if (webhook.url) {
-    console.log(`ℹ️  Bot Vercel'da ishlayapti (${webhook.url}). Lokal bot yoqilmadi.`);
+    console.log(`🤖 Bot webhook rejimida: ${webhook.url}`);
     return;
   }
 

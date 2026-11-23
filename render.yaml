@@ -1,0 +1,25 @@
+# Render Blueprint: backend (Express API + Telegram bot webhook)
+# Frontend (Mini App va Admin Panel) Vercel'da turadi va /api so'rovlarini shu serverga yo'naltiradi.
+services:
+  - type: web
+    name: tez-pizza-api
+    runtime: node
+    region: singapore
+    plan: free
+    buildCommand: npm install
+    startCommand: node src/index.js
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: MINI_APP_URL
+        value: https://pizza-bot-theta.vercel.app
+      - key: DATABASE_URL
+        sync: false
+      - key: BOT_TOKEN
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: TELEGRAM_WEBHOOK_SECRET
+        sync: false

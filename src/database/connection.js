@@ -25,9 +25,10 @@ async function init() {
 
   const url = new URL(process.env.DATABASE_URL);
   const host = url.hostname;
-  // Vercel'da oddiy DNS ishonchli ishlaydi; lokal kompyuterda esa ochiq DNS orqali topamiz.
+  // Hosting (Render/Vercel) da oddiy DNS ishonchli ishlaydi; lokal kompyuterda esa ochiq DNS orqali topamiz.
   const onVercel = Boolean(process.env.VERCEL);
-  const address = onVercel ? host : await resolveHost(host);
+  const onHosting = onVercel || Boolean(process.env.RENDER);
+  const address = onHosting ? host : await resolveHost(host);
 
   const adapter = new PrismaPg({
     host: address,
