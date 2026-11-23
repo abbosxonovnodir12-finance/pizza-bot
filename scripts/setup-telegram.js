@@ -42,7 +42,7 @@ async function main() {
   if (!/^https:\/\//.test(base)) throw new Error('Sayt manzilini bering: node scripts/setup-telegram.js https://...');
   if (!SECRET) throw new Error(".env faylida TELEGRAM_WEBHOOK_SECRET yo'q");
   const apiIdx = process.argv.indexOf('--api');
-  const apiBase = (apiIdx > -1 ? process.argv[apiIdx + 1] : base).replace(//+$/, '');
+  const apiBase = (apiIdx > -1 ? process.argv[apiIdx + 1] : base).replace(/\/+$/, '');
 
   await tg('setWebhook', {
     url: `${apiBase}/api/telegram`,
