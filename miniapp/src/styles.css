@@ -1417,11 +1417,16 @@ h4 {
 }
 .pd-add {
   flex: 1;
+  min-width: 0;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   white-space: nowrap;
-  padding-left: 14px;
-  padding-right: 14px;
+  font-size: 15px;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+.pd-footer .stepper {
+  flex-shrink: 0;
 }
 .pd-add-sep {
   width: 1px;
@@ -1465,8 +1470,8 @@ h4 {
   border-radius: 18px;
 }
 .stepper.big button {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
 }
 .stepper.big span {
   min-width: 22px;
@@ -1710,6 +1715,7 @@ h4 {
 }
 .checkout-bar .btn {
   flex: 1;
+  min-width: 0;
   padding: 15px 12px;
   white-space: nowrap;
   font-size: 15px;
